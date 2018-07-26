@@ -54,7 +54,7 @@ cd /etc/nginx
 
 rm nginx.conf
 
-wget https://www.dropbox.com/s/2tn48ktnjyvwg5m/nginx.conf
+wget https://github.com/neo250376/arionum-node-auto-setup/blob/master/nginx.conf
 
 cd
 
@@ -125,7 +125,7 @@ rm /etc/php-fpm.d/www.conf
 
 cd /etc/php-fpm.d
 
-wget https://www.dropbox.com/s/qv8ikd8wuviu68e/www.conf
+wget https://github.com/neo250376/arionum-node-auto-setup/blob/master/www.conf
 
 cd
 
@@ -147,7 +147,7 @@ rm /var/www/node/include/config.inc.php
 
 cd include
 
-wget https://www.dropbox.com/s/vmhs8u3jm7gxhfw/config.inc.php
+wget https://github.com/neo250376/arionum-node-auto-setup/blob/master/config.inc.php
 
 chmod 777 config.inc.php
 
@@ -207,7 +207,7 @@ echo 'All node and stats node have been completed. Remember to add
 unique-worker-name
 http://node-host-address report.php false $secrettoken to your workers config.cfg file'
 
-wget https://www.dropbox.com/s/5at60z5r2aax5hf/database.sql
+wget https://github.com/neo250376/arionum-node-auto-setup/blob/master/database.sql
 
 echo "Dumping blockchain into database - Please wait......"
 
