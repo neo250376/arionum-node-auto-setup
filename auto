@@ -1,0 +1,245 @@
+#! /bin/bash
+echo "Enter Server IP Address: " 
+read server
+yum -y install epel-release
+yum -y update
+yum -y install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+yum -y update
+yum -y install yum-utils
+yum-config-manager --enable remi-php72
+yum -y install php php-gmp php-mysql php-mbstring php-bcmath screen rsync yum-cron nano pv
+rpm --import https://yum.mariadb.org/RPM-GPG-KEY-MariaDB;
+echo "[mariadb]" > /etc/yum.repos.d/MariaDB.repo;
+echo "name = MariaDB" >> /etc/yum.repos.d/MariaDB.repo;
+echo "baseurl = http://yum.mariadb.org/10.1/centos7-amd64" >> /etc/yum.repos.d/MariaDB.repo;                                                                                                                                              
+echo "gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB" >> /etc/yum.repos.d/MariaDB.repo;
+echo "gpgcheck=1" >> /etc/yum.repos.d/MariaDB.repo;
+yum -y update
+yum -y install MariaDB-server MariaDB-client;
+systemctl start mariadb;
+systemctl enable mariadb;
+systemctl start httpd;
+systemctl enable httpd;
+systemctl start yum-cron;
+systemctl enable yum-cron;
+echo "DELETE FROM mysql.user WHERE User=''"|mysql;
+echo "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"|mysql;
+echo "DROP DATABASE IF EXISTS test;"|mysql;
+echo "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%'"|mysql;
+echo "create database coin;"|mysql;
+echo "CREATE USER 'coin'@'localhost' IDENTIFIED BY 'password';"|mysql;
+echo "GRANT ALL PRIVILEGES ON coin . * TO 'coin'@'localhost';"|mysql;
+echo "FLUSH PRIVILEGES;"|mysql;
+
+echo "
+
+#
+# This group is read both both by the client and the server
+# use it for options that affect everything
+#
+[client-server]
+
+#
+# include all files from the config directory
+#
+!includedir /etc/my.cnf.d
+[mysqld]
+bind-address = 127.0.0.1" > /etc/my.cnf
+
+yum -y install nginx
+
+yum -y install php-fpm
+
+cd /etc/nginx
+
+rm nginx.conf
+
+wget https://www.dropbox.com/s/2tn48ktnjyvwg5m/nginx.conf
+
+cd
+
+rm /etc/php-fpm.conf 
+
+echo "
+;;;;;;;;;;;;;;;;;;;;;
+; FPM Configuration ;
+;;;;;;;;;;;;;;;;;;;;;
+
+; All relative paths in this configuration file are relative to PHP's install
+; prefix.
+
+; Include one or more files. If glob(3) exists, it is used to include a bunch of
+; files from a glob(3) pattern. This directive can be used everywhere in the
+; file.
+include=/etc/php-fpm.d/*.conf
+
+;;;;;;;;;;;;;;;;;;
+; Global Options ;
+;;;;;;;;;;;;;;;;;;
+
+[global]
+; Pid file
+; Default Value: none
+pid = /var/run/php-fpm/php-fpm.pid
+
+; Error log file
+; Default Value: /var/log/php-fpm.log
+error_log = /var/log/php-fpm/error.log
+
+; Log level
+; Possible Values: alert, error, warning, notice, debug
+; Default Value: notice
+;log_level = notice
+
+; If this number of child processes exit with SIGSEGV or SIGBUS within the time
+; interval set by emergency_restart_interval then FPM will restart. A value
+; of '0' means 'Off'.
+; Default Value: 0
+;emergency_restart_threshold = 0
+
+; Interval of time used by emergency_restart_interval to determine when
+; a graceful restart will be initiated.  This can be useful to work around
+; accidental corruptions in an accelerator's shared memory.
+; Available Units: s(econds), m(inutes), h(ours), or d(ays)
+; Default Unit: seconds
+; Default Value: 0
+;emergency_restart_interval = 0
+
+; Time limit for child processes to wait for a reaction on signals from master.
+; Available units: s(econds), m(inutes), h(ours), or d(ays)
+; Default Unit: seconds
+; Default Value: 0
+;process_control_timeout = 0
+
+; Send FPM to background. Set to 'no' to keep FPM in foreground for debugging.
+; Default Value: yes
+daemonize = yes
+
+;;;;;;;;;;;;;;;;;;;;
+; Pool Definitions ;
+;;;;;;;;;;;;;;;;;;;;
+
+; See /etc/php-fpm.d/*.conf" > /etc/php-fpm.conf
+
+rm /etc/php-fpm.d/www.conf 
+
+cd /etc/php-fpm.d
+
+wget https://www.dropbox.com/s/qv8ikd8wuviu68e/www.conf
+
+cd
+
+yum -y install git
+
+systemctl disable httpd; systemctl stop httpd;
+
+systemctl enable nginx; systemctl start nginx;
+
+systemctl enable php-fpm; systemctl start php-fpm
+
+cd /var/www
+
+git clone https://github.com/arionum/node
+
+cd node
+
+rm /var/www/node/include/config.inc.php
+
+cd include
+
+wget https://www.dropbox.com/s/vmhs8u3jm7gxhfw/config.inc.php
+
+chmod 777 config.inc.php
+
+cd
+
+systemctl disable firewalld
+
+systemctl stop firewalld
+
+iptables -F
+
+setenforce 0
+
+sed -i s/SELINUX=enforcing/SELINUX=permissive/g /etc/selinux/config
+
+chmod 777 /var/www/node/tmp -R
+
+cd /var/www/node
+
+wget https://github.com/ProgrammerDan/arionum-node/releases/download/0.2.0/stats-augment.tar.gz
+
+sudo tar -xzf stats-augment.tar.gz
+
+sudo chmod -R 777 tmp
+
+cd include
+
+sudo mkdir logs
+
+sudo chmod -R 777 logs
+
+echo "Please enter your Secret Token for your stats node: "
+
+read secrettoken
+
+cd /var/www/node/include
+
+sudo echo '
+<?php
+$_config['report_token']="$secrettoken";
+?>' > reportconfig.inc.php
+
+read -p "Please goto serveripaddress:9999 in your choice of browser, you should the basic node layout (you may have to refresh once).
+ 
+Press Enter after you have done this to continue syncing"
+
+read -p "Goto serverip:9999/dashboard.php to check the stats node has been initialised (you may be asked to refresh once). 
+
+Press enter to continue"
+
+cd /tmp
+
+wget https://www.dropbox.com/s/xczdg931y9wlf26/blocks.sql
+
+echo 'All node and stats node have been completed. Remember to add
+
+unique-worker-name
+http://node-host-address report.php false $secrettoken to your workers config.cfg file'
+
+wget https://www.dropbox.com/s/5at60z5r2aax5hf/database.sql
+
+echo "Dumping blockchain into database - Please wait......"
+
+mysql < database.sql
+
+echo "After exiting you may need to run sanity once more to continue with sync (or you can wait for cron to run automatically after 10 minutes).
+
+If you get 'Sanity lock in place' when running php sanity.php please delete the Sanity lock file with rm /var/www/node/tmp/sanity-lock (you may also need to do this more than once)"
+
+read -p "Press Enter to start sanity and exit the installer"
+
+echo "*/10 * * * * root php /var/www/node/sanity.php >/dev/null" >> /etc/crontab
+
+cd /var/www/node/tmp
+
+sudo rm sanity-lock
+
+sudo rm sanity-lock
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
